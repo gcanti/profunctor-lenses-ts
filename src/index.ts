@@ -2,6 +2,7 @@ import { HKT2 } from 'fp-ts/lib/HKT'
 import { Profunctor } from 'fp-ts/lib/Profunctor'
 import { Strong } from './Strong'
 import * as forget from './Forget'
+import { identity } from 'fp-ts/lib/function'
 
 /** A general-purpose Data.Lens */
 export interface Optic<P, S, T, A, B> {
@@ -43,5 +44,5 @@ export function lens<S, T, A, B>(get: (s: S) => A, set: (s: S) => (b: B) => T): 
 
 /** View the focus of a `Getter` */
 export function view<S, T, A, B>(getter: Getter<S, T, A, B>): (s: S) => A {
-  return s => getter(new forget.Forget<A, A, B>(a => a)).value(s)
+  return s => getter(new forget.Forget(identity)).value(s)
 }
