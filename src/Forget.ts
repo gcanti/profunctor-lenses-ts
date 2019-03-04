@@ -1,38 +1,48 @@
-import { Profunctor } from 'fp-ts/lib/Profunctor'
-import { Strong } from './Strong'
+import { Profunctor3 } from 'fp-ts/lib/Profunctor'
+import { Strong3 } from 'fp-ts/lib/Strong'
 
-export const URI = 'Forget'
+export const URI = 'profunctor-lenses-ts/Forget'
 
 export type URI = typeof URI
 
-/** Profunctor that forgets the `A` value and returns (and accumulates) a
- * value of type `R`
+declare module 'fp-ts/lib/HKT' {
+  interface URI2HKT3<U, L, A> {
+    'profunctor-lenses-ts/Forget': Forget<U, L, A>
+  }
+}
+
+/**
+ * Profunctor that forgets the `A` value and returns (and accumulates) a
+ * value of type `U`
  */
-export class Forget<R, L, A> {
-  readonly _A: A
-  readonly _L: L
-  readonly _R: R
-  readonly _URI: URI
-  constructor(public readonly value: (l: L) => R) {}
+export class Forget<U, L, A> {
+  readonly _A!: A
+  readonly _L!: L
+  readonly _U!: U
+  readonly _URI!: URI
+  constructor(readonly run: (l: L) => U) {}
+  map<B>(_: (a: A) => B): Forget<U, L, B> {
+    return this as any
+  }
 }
 
-export function map<R, B, C, D>(g: (c: C) => D, fbc: Forget<R, B, C>): Forget<R, B, D> {
-  return fbc as any
+const map = <U, L, A, B>(fa: Forget<U, L, A>, f: (a: A) => B): Forget<U, L, B> => {
+  return fa.map(f)
 }
 
-export function promap<R, A, B, C, D>(f: (a: A) => B, g: (c: C) => D, fbc: Forget<R, B, C>): Forget<R, A, D> {
-  return new Forget(a => fbc.value(f(a)))
+const promap = <U, A, B, C, D>(fbc: Forget<U, B, C>, f: (a: A) => B, g: (c: C) => D): Forget<U, A, D> => {
+  return new Forget(a => fbc.run(f(a)))
 }
 
-export function first<R, A, B, C>(pab: Forget<R, A, B>): Forget<R, [A, C], [B, C]> {
-  return new Forget(([a]) => pab.value(a))
+const first = <U, A, B, C>(pab: Forget<U, A, B>): Forget<U, [A, C], [B, C]> => {
+  return new Forget(([a]) => pab.run(a))
 }
 
-export function second<R, A, B, C>(pab: Forget<R, B, C>): Forget<R, [A, B], [A, C]> {
-  return new Forget(([_, a]) => pab.value(a))
+const second = <U, A, B, C>(pbc: Forget<U, B, C>): Forget<U, [A, B], [A, C]> => {
+  return new Forget(([_, a]) => pbc.run(a))
 }
 
-export const forget: Profunctor<URI> & Strong<URI> = {
+export const forget: Profunctor3<URI> & Strong3<URI> = {
   URI,
   map,
   promap,
